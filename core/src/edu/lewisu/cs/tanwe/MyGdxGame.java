@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
 import edu.lewisu.cs.cpsc41000.common.Boundary;
 import edu.lewisu.cs.cpsc41000.common.EdgeHandler;
@@ -40,6 +40,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	Texture background;
 
 	int WORLDWIDTH, WORLDHEIGHT;
+	Music lifeOnMars;
 
 	@Override
 	public void create () {
@@ -47,7 +48,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		HEIGHT = Gdx.graphics.getHeight();
 		batch = new SpriteBatch();
 
-		Texture img = new Texture("badlogic.jpg");
+		Texture img = new Texture("spaceman.png");
 		background = new Texture("background.png");
 		WORLDWIDTH = background.getWidth();
 		WORLDHEIGHT = background.getHeight();
@@ -97,15 +98,19 @@ public class MyGdxGame extends ApplicationAdapter {
 			EdgeHandler.EdgeConstants.PAN, EdgeHandler.EdgeConstants.PAN);
 		
 		scene = 0;
-		title = new ActionLabel("TITLE",200,400,"fonts/arial_large_font.fnt");
+		title = new ActionLabel("LIFE ON MARS?",50,400,"fonts/arial_large_font.fnt");
 		startGameLabel = new ActionLabel("Press ESC to begin",150,100,"fonts/arial.fnt");
+		lifeOnMars = Gdx.audio.newMusic(Gdx.files.internal("music/lifeonmars.mp3"));
+		lifeOnMars.setLooping(true);
+		lifeOnMars.setVolume(0.1f);
+		lifeOnMars.play();
 	}
 
 	public void renderMain() {
-		Gdx.gl.glClearColor(1,0,1,1);
+		Gdx.gl.glClearColor(1,0,0,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		float dt = Gdx.graphics.getDeltaTime();
-		Gdx.gl.glClearColor(1,0,1,1);
+		Gdx.gl.glClearColor(1,0,0,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
 		if (Gdx.input.isKeyJustPressed(Keys.SPACE) && pc.onSolid()) {
@@ -122,8 +127,7 @@ public class MyGdxGame extends ApplicationAdapter {
 			pc.accelerateAtAngle(180);
 		}
 		if (Gdx.input.isKeyPressed(Keys.S)) {
-			// disabled for now, potentially implement crouch feature
-			//pc.accelerateAtAngle(270);
+			pc.accelerateAtAngle(270);
 		}
 		if (Gdx.input.isKeyPressed(Keys.D)) {
 			pc.accelerateAtAngle(0);
@@ -180,7 +184,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	}	
 
 	public void renderTitleScreen() {
-		Gdx.gl.glClearColor(0,1,0,1);
+		Gdx.gl.glClearColor(1,0,0,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
 			scene = 1;
