@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 
 import edu.lewisu.cs.cpsc41000.common.Boundary;
 import edu.lewisu.cs.cpsc41000.common.EdgeHandler;
@@ -25,11 +26,16 @@ public class MyGdxGame extends ApplicationAdapter {
 	PlatformCharacter pc;
 	ImageBasedScreenObjectDrawer artist;
 	ArrayList<ImageBasedScreenObject> walls;
+	ImageBasedScreenObject goal;
+	ArrayList<ImageBasedScreenObject> bouncyPlatforms;
+	ArrayList<ImageBasedScreenObject> gooPlatforms; // players cannot jump on these
 	ArrayList<Boundary> boundaries;
 	EdgeHandler edgy;
 	OrthographicCamera cam;
+	OrthographicCamera titleCam;
 	float WIDTH, HEIGHT;
 	ActionLabel title;
+	ActionLabel startGameLabel;
 	int scene;
 	Texture background;
 
@@ -46,29 +52,53 @@ public class MyGdxGame extends ApplicationAdapter {
 		WORLDWIDTH = background.getWidth();
 		WORLDHEIGHT = background.getHeight();
 
+		// player character settings
 		pc = new PlatformCharacter(img,150,0,false);
 		pc.setMaxSpeed(400);
 		pc.setAcceleration(800);
 		pc.setDeceleration(1600);
 
+		// Building a test level with platforms
 		walls = new ArrayList<ImageBasedScreenObject>();
 		Texture wallTex = new Texture("wall.png");
 		walls.add(new ImageBasedScreenObject(wallTex,200,0,true));
 		walls.add(new ImageBasedScreenObject(wallTex,500,0,true));
 		walls.add(new ImageBasedScreenObject(wallTex,500,wallTex.getHeight(),true));
 		walls.add(new ImageBasedScreenObject(wallTex,500+wallTex.getWidth(),0,true));
-		walls.add(new ImageBasedScreenObject(wallTex,800,100,true));
 		walls.add(new ImageBasedScreenObject(wallTex,900,0,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000,200,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1500,0,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1200,0,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1100,0,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1100,wallTex.getHeight(),true));
+		walls.add(new ImageBasedScreenObject(wallTex,1100,wallTex.getHeight()*2,true));
+
+		//player continues to bounce on these surfaces
+		Texture bouncyTex = new Texture("bouncy.png");
+		bouncyPlatforms = new ArrayList<ImageBasedScreenObject>();
+		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,800,100,true));
+
+		// slow the player down
+		Texture gooTex = new Texture("goo.png");
+		gooPlatforms = new ArrayList<ImageBasedScreenObject>();
+		gooPlatforms.add(new ImageBasedScreenObject(gooTex,1800,0,true));
+		gooPlatforms.add(new ImageBasedScreenObject(gooTex,1800+gooTex.getWidth(),0,true));
+
 		pc.setPlatforms(walls);
 		artist = new ImageBasedScreenObjectDrawer(batch);
 		cam = new OrthographicCamera(WIDTH,HEIGHT);
 		cam.translate(WIDTH/2,HEIGHT/2);
 		cam.update();
+		titleCam = new OrthographicCamera(WIDTH,HEIGHT);
+		titleCam.translate(WIDTH/2,HEIGHT/2);
+		titleCam.update();
 		batch.setProjectionMatrix(cam.combined);
-		edgy = new EdgeHandler(pc,cam,batch,0,WORLDWIDTH,0,WORLDHEIGHT,50,
+		edgy = new EdgeHandler(pc,cam,batch,0,WORLDWIDTH,0,WORLDHEIGHT,100,
 			EdgeHandler.EdgeConstants.PAN, EdgeHandler.EdgeConstants.PAN);
-		title = new ActionLabel("TITLE", 600, 600, "fonts/arial.fnt");
+		
 		scene = 0;
+		title = new ActionLabel("TITLE",200,400,"fonts/arial_large_font.fnt");
+		startGameLabel = new ActionLabel("Press ESC to begin",150,100,"fonts/arial.fnt");
 	}
 
 	public void renderMain() {
@@ -92,6 +122,7 @@ public class MyGdxGame extends ApplicationAdapter {
 			pc.accelerateAtAngle(180);
 		}
 		if (Gdx.input.isKeyPressed(Keys.S)) {
+			// disabled for now, potentially implement crouch feature
 			//pc.accelerateAtAngle(270);
 		}
 		if (Gdx.input.isKeyPressed(Keys.D)) {
@@ -100,6 +131,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		pc.applyPhysics(dt);
 		Vector2 bounce;
+
 		for (ImageBasedScreenObject wall : walls) {
 			if (pc.overlaps(wall)) {
 				System.out.println("collision");
@@ -109,6 +141,24 @@ public class MyGdxGame extends ApplicationAdapter {
 				}
 			}
 		}
+
+		for (ImageBasedScreenObject bouncy : bouncyPlatforms) {
+			if (pc.overlaps(bouncy)) {
+				System.out.println("boing");
+				bounce = pc.preventOverlap(bouncy);
+				if (bounce != null) {
+					pc.rebound(bounce.angle(),1f);
+				}
+			}
+		}
+
+		for (ImageBasedScreenObject goo : gooPlatforms) {
+			if (pc.overlaps(goo)) {
+				bounce = pc.preventOverlap(goo);
+			}
+		}
+
+
 		edgy.enforceEdges();
 		batch.begin();
 		batch.draw(background, 0,0);
@@ -116,6 +166,14 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		for (ImageBasedScreenObject wall : walls) {
 			artist.draw(wall);
+		}
+
+		for (ImageBasedScreenObject bouncy : bouncyPlatforms) {
+			artist.draw(bouncy);
+		}
+
+		for (ImageBasedScreenObject goo : gooPlatforms) {
+			artist.draw(goo);
 		}
 
 		batch.end();
@@ -127,19 +185,21 @@ public class MyGdxGame extends ApplicationAdapter {
 		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
 			scene = 1;
 		} else {
+			batch.setProjectionMatrix(titleCam.combined);
 			batch.begin();
-			batch.draw(background, 0,0);
+			batch.draw(background,0,0);
 			title.draw(batch,1f);
+			startGameLabel.draw(batch,1f);
 			batch.end();
 		}
 	}
 
 	@Override
 	public void render () {
-		if (scene == 0) {
-			renderTitleScreen();
-		} else {
+		if (scene == 1) {
 			renderMain();
+		} else {
+			renderTitleScreen();
 		}
 	}
 	
