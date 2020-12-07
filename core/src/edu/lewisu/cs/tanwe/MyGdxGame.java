@@ -27,16 +27,21 @@ public class MyGdxGame extends ApplicationAdapter {
 	PlatformCharacter pc;
 	PlatformCharacter alien;
 	ImageBasedScreenObjectDrawer artist;
+
 	ArrayList<ImageBasedScreenObject> walls;
 	ImageBasedScreenObject goal;
 	ArrayList<ImageBasedScreenObject> bouncyPlatforms;
 	ArrayList<ImageBasedScreenObject> gooPlatforms; // players cannot jump on these
+
 	ArrayList<Boundary> boundaries;
 	EdgeHandler edgy;
+
 	OrthographicCamera cam;
 	OrthographicCamera titleCam;
 	OrthographicCamera winCam;
+
 	float WIDTH, HEIGHT;
+
 	ActionLabel title;
 	ActionLabel winMessage;
 	ActionLabel startGameLabel;
@@ -45,8 +50,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	Texture background;
 
 	int WORLDWIDTH, WORLDHEIGHT;
-	ArrayList<Music> songs;
 
+	ArrayList<Music> songs;
 	Music ashesToAshes;
 	Music lifeOnMars;
 
@@ -69,7 +74,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		// movement tutorial
 		tutorials = new ArrayList<ActionLabel>();
-		tutorials.add(new ActionLabel("W/SPACE - Jump\nA - Move left \nD - Move right", 100, -100, "fonts/arial_small_font.fnt"));
+		tutorials.add(new ActionLabel("W - Jump\nA - Move left \nD - Move right", 100, -100, "fonts/arial_small_font.fnt"));
 
 		// Building a test level with platforms
 		walls = new ArrayList<ImageBasedScreenObject>();
@@ -92,10 +97,12 @@ public class MyGdxGame extends ApplicationAdapter {
 		
 
 		//player continues to bounce on these surfaces and pressing jump on landing will launch player
-		tutorials.add(new ActionLabel("Press jump while landing on \nblue platforms to bounce high", 600, -40, "fonts/arial_small_font.fnt"));
+		tutorials.add(new ActionLabel("Press jump while landing on \npink platforms to bounce high", 600, -40, "fonts/arial_small_font.fnt"));
 		Texture bouncyTex = new Texture("bouncy.png");
 		bouncyPlatforms = new ArrayList<ImageBasedScreenObject>();
 		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,800,100,true));
+		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,600,400,true));
+		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,1600,150,true));
 
 		// slow the player down and prevents jumping
 		tutorials.add(new ActionLabel("Green platforms slow you down and\nprevent you from jumping", 1500, -40, "fonts/arial_small_font.fnt"));
@@ -104,9 +111,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		gooPlatforms.add(new ImageBasedScreenObject(gooTex,1800,0,true));
 		gooPlatforms.add(new ImageBasedScreenObject(gooTex,1800+gooTex.getWidth(),0,true));
 		
+		tutorials.add(new ActionLabel("Touch the gold platforms to end \nthe level",2000,-40, "fonts/arial_small_font.fnt"));
 		Texture goalTex = new Texture("goal.png");
-		goal = new ImageBasedScreenObject(goalTex,2500,0,true);
-		winMessage = new ActionLabel("YOU WIN",50,400,"fonts/arial_large_font.fnt");
+		goal = new ImageBasedScreenObject(goalTex,2700,0,true);
+		winMessage = new ActionLabel("LEVEL \nCOMPLETE",100,100,"fonts/arial_large_font.fnt");
 
 
 		pc.setPlatforms(walls);
@@ -125,7 +133,7 @@ public class MyGdxGame extends ApplicationAdapter {
 			EdgeHandler.EdgeConstants.PAN, EdgeHandler.EdgeConstants.PAN);
 		
 		scene = 0;
-		title = new ActionLabel("LIFE ON MARS?",50,400,"fonts/arial_large_font.fnt");
+		title = new ActionLabel("SPACE ODDITY",50,400,"fonts/arial_large_font.fnt");
 		startGameLabel = new ActionLabel("Press ESC to begin",150,100,"fonts/arial.fnt");
 
 
@@ -155,8 +163,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClearColor(1,0,0,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
-		if (Gdx.input.isKeyJustPressed(Keys.SPACE) && pc.onSolid()) {
-			pc.jump();
+		if (Gdx.input.isKeyJustPressed(Keys.SPACE)) {
+			
 		}
 		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
 			scene = 0;
@@ -199,7 +207,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				if (bounce != null) {
 					pc.rebound(bounce.angle(),1f);
 					if (Gdx.input.isKeyPressed(Keys.W)) {
-						pc.setMaxSpeed(800); // bounce higher
+						pc.setMaxSpeed(700); // bounce higher
 					}
 				}
 			}
