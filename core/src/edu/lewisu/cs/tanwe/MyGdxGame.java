@@ -25,7 +25,7 @@ import edu.lewisu.cs.cpsc41000.common.labels.ActionLabel;
 public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch batch;
 	PlatformCharacter pc;
-	PlatformCharacter alien;
+	Alien alien;
 	ImageBasedScreenObjectDrawer artist;
 
 	ArrayList<ImageBasedScreenObject> walls;
@@ -65,6 +65,12 @@ public class MyGdxGame extends ApplicationAdapter {
 		background = new Texture("background.png");
 		WORLDWIDTH = background.getWidth();
 		WORLDHEIGHT = background.getHeight();
+
+		// alien
+		alien = new Alien(img,400,0,false);
+		alien.setMaxSpeed(200);
+		alien.setAcceleration(400);
+		alien.setDeceleration(800);
 
 		// player character settings
 		pc = new PlatformCharacter(img,150,0,false);
@@ -118,6 +124,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 
 		pc.setPlatforms(walls);
+		alien.setPlatforms(walls);
 		artist = new ImageBasedScreenObjectDrawer(batch);
 		cam = new OrthographicCamera(WIDTH,HEIGHT);
 		cam.translate(WIDTH/2,HEIGHT/2);
@@ -186,6 +193,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		pc.applyPhysics(dt);
 		Vector2 bounce;
 
+		
+
 		if (pc.onSolid()) {
 			pc.setMaxSpeed(400); // resets player speed 
 		}
@@ -222,6 +231,23 @@ public class MyGdxGame extends ApplicationAdapter {
 			}
 		}
 
+		if (pc.overlaps(alien)) {
+			if (!alien.isDead) {
+				bounce = pc.preventOverlap(alien);
+				if (!pc.onSolid()) {
+					System.out.println("killed alien");
+					alien.killed();
+				} else {
+					System.out.println("OUCH");
+				}
+				if (bounce != null) {
+					pc.rebound(bounce.angle(),0.2f);
+				}
+			} else {
+				System.out.println("Alien is dead");
+			}
+		}
+
 		if (pc.overlaps(goal)) {
 			scene = 2; // win screen
 		}
@@ -234,7 +260,7 @@ public class MyGdxGame extends ApplicationAdapter {
 			tutorial.draw(batch,1f);
 		}
 		artist.draw(pc);
-
+		artist.draw(alien);
 		for (ImageBasedScreenObject wall : walls) {
 			artist.draw(wall);
 		}
