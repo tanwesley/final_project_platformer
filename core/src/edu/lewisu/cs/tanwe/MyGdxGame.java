@@ -11,7 +11,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 
 import edu.lewisu.cs.cpsc41000.common.Boundary;
 import edu.lewisu.cs.cpsc41000.common.EdgeHandler;
@@ -28,6 +30,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	Alien alien;
 	ImageBasedScreenObjectDrawer artist;
 
+	int playerHealth = 3;
+
 	ArrayList<ImageBasedScreenObject> walls;
 	ImageBasedScreenObject goal;
 	ArrayList<ImageBasedScreenObject> bouncyPlatforms;
@@ -37,13 +41,14 @@ public class MyGdxGame extends ApplicationAdapter {
 	EdgeHandler edgy;
 
 	OrthographicCamera cam;
-	OrthographicCamera titleCam;
-	OrthographicCamera winCam;
+	OrthographicCamera menuCam;
 
 	float WIDTH, HEIGHT;
 
+	Label healthLabel;
 	ActionLabel title;
 	ActionLabel winMessage;
+	ActionLabel deathMessage;
 	ActionLabel startGameLabel;
 	ArrayList<ActionLabel> tutorials;
 	int scene;
@@ -54,6 +59,14 @@ public class MyGdxGame extends ApplicationAdapter {
 	ArrayList<Music> songs;
 	Music ashesToAshes;
 	Music lifeOnMars;
+
+	public void restart() {
+		playerHealth = 3;
+		pc.setXPos(50);
+		pc.setYPos(0);
+		alien.isDead = false;
+		scene = 1;
+	}
 
 	@Override
 	public void create () {
@@ -73,11 +86,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		alien.setDeceleration(800);
 
 		// player character settings
-		pc = new PlatformCharacter(img,150,0,false);
+		pc = new PlatformCharacter(img,50,0,false);
 		pc.setMaxSpeed(400);
 		pc.setAcceleration(800);
 		pc.setDeceleration(1600);
-
 		// movement tutorial
 		tutorials = new ArrayList<ActionLabel>();
 		tutorials.add(new ActionLabel("W - Jump\nA - Move left \nD - Move right", 100, -100, "fonts/arial_small_font.fnt"));
@@ -120,7 +132,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		tutorials.add(new ActionLabel("Touch the gold platforms to end \nthe level",2000,-40, "fonts/arial_small_font.fnt"));
 		Texture goalTex = new Texture("goal.png");
 		goal = new ImageBasedScreenObject(goalTex,2700,0,true);
-		winMessage = new ActionLabel("LEVEL \nCOMPLETE",100,100,"fonts/arial_large_font.fnt");
+		winMessage = new ActionLabel("LEVEL \nCOMPLETE \nESC to restart",100,100,"fonts/arial_large_font.fnt");
+		deathMessage = new ActionLabel("YOU DIED \nESC to restart", 100,100,"fonts/arial_large_font.fnt");
 
 
 		pc.setPlatforms(walls);
@@ -129,12 +142,12 @@ public class MyGdxGame extends ApplicationAdapter {
 		cam = new OrthographicCamera(WIDTH,HEIGHT);
 		cam.translate(WIDTH/2,HEIGHT/2);
 		cam.update();
-		titleCam = new OrthographicCamera(WIDTH,HEIGHT);
-		titleCam.translate(WIDTH/2,HEIGHT/2);
-		titleCam.update();
-		winCam = new OrthographicCamera(WIDTH,HEIGHT);
-		winCam.translate(WIDTH/2,HEIGHT/2);
-		winCam.update();
+		menuCam = new OrthographicCamera(WIDTH,HEIGHT);
+		menuCam.translate(WIDTH/2,HEIGHT/2);
+		menuCam.update();
+		menuCam = new OrthographicCamera(WIDTH,HEIGHT);
+		menuCam.translate(WIDTH/2,HEIGHT/2);
+		menuCam.update();
 		batch.setProjectionMatrix(cam.combined);
 		edgy = new EdgeHandler(pc,cam,batch,0,WORLDWIDTH,0,WORLDHEIGHT,100,
 			EdgeHandler.EdgeConstants.PAN, EdgeHandler.EdgeConstants.PAN);
@@ -238,7 +251,9 @@ public class MyGdxGame extends ApplicationAdapter {
 					System.out.println("killed alien");
 					alien.killed();
 				} else {
+					playerHealth -= 1;
 					System.out.println("OUCH");
+					System.out.println("Lives left: " + playerHealth);
 				}
 				if (bounce != null) {
 					pc.rebound(bounce.angle(),0.2f);
@@ -284,7 +299,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
 			scene = 1;
 		} else {
-			batch.setProjectionMatrix(titleCam.combined);
+			batch.setProjectionMatrix(menuCam.combined);
 			batch.begin();
 			batch.draw(background,0,0);
 			title.draw(batch,1f);
@@ -294,17 +309,41 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 
 	public void renderWinScreen() {
+		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
+			restart();
+		} else {
+			Gdx.gl.glClearColor(1,0,0,1);
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+			batch.setProjectionMatrix(menuCam.combined);
+			batch.begin();
+			batch.draw(background,0,0);
+			winMessage.draw(batch,1f);
+			batch.end();
+		}
+	}
+
+	public void renderDeathScreen() {
 		Gdx.gl.glClearColor(1,0,0,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		batch.setProjectionMatrix(winCam.combined);
-		batch.begin();
-		batch.draw(background,0,0);
-		winMessage.draw(batch,1f);
-		batch.end();
+		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
+			restart();
+		} else {
+			Gdx.gl.glClearColor(1,0,0,1);
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+			batch.setProjectionMatrix(menuCam.combined);
+			batch.begin();
+			batch.draw(background,0,0);
+			deathMessage.draw(batch,1f);
+			batch.end();
+		}
 	}
 
 	@Override
 	public void render () {
+		if (playerHealth <= 0) {
+			scene = 3;
+		}
+
 		if (scene == 1) {
 			songs.get(0).stop();
 			songs.get(2).stop();
@@ -316,6 +355,11 @@ public class MyGdxGame extends ApplicationAdapter {
 			songs.get(0).play();
 			renderWinScreen();
 
+		} else if (scene == 3) {
+			songs.get(1).stop();
+			songs.get(2).stop();
+			songs.get(0).play();
+			renderDeathScreen();
 		} else {
 			songs.get(0).stop();
 			songs.get(1).stop();
