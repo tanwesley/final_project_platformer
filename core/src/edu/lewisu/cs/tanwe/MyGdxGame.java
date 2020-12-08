@@ -26,12 +26,13 @@ import edu.lewisu.cs.cpsc41000.common.labels.ActionLabel;
 
 public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch batch;
-	PlatformCharacter pc;
+	PlayerCharacter pc;
 	Alien alien;
 	ImageBasedScreenObjectDrawer artist;
 
 	int playerHealth = 3;
 
+	ImageBasedScreenObject key;
 	ArrayList<ImageBasedScreenObject> walls;
 	ImageBasedScreenObject goal;
 	ArrayList<ImageBasedScreenObject> bouncyPlatforms;
@@ -61,10 +62,11 @@ public class MyGdxGame extends ApplicationAdapter {
 	Music lifeOnMars;
 
 	public void restart() {
+		pc.hasKey = false;
 		playerHealth = 3;
 		pc.setXPos(50);
 		pc.setYPos(0);
-		alien.isDead = false;
+		key.setXPos(1450);
 		scene = 1;
 	}
 
@@ -79,6 +81,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		WORLDWIDTH = background.getWidth();
 		WORLDHEIGHT = background.getHeight();
 
+		// key 
+		Texture keyTex = new Texture("key.png");
+		key = new ImageBasedScreenObject(keyTex,1450,550,true);
+
 		// alien
 		alien = new Alien(img,400,0,false);
 		alien.setMaxSpeed(200);
@@ -86,7 +92,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		alien.setDeceleration(800);
 
 		// player character settings
-		pc = new PlatformCharacter(img,50,0,false);
+		pc = new PlayerCharacter(img,50,0,false);
 		pc.setMaxSpeed(400);
 		pc.setAcceleration(800);
 		pc.setDeceleration(1600);
@@ -245,25 +251,23 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 
 		if (pc.overlaps(alien)) {
-			if (!alien.isDead) {
-				bounce = pc.preventOverlap(alien);
-				if (!pc.onSolid()) {
-					System.out.println("killed alien");
-					alien.killed();
-				} else {
-					playerHealth -= 1;
-					System.out.println("OUCH");
-					System.out.println("Lives left: " + playerHealth);
-				}
-				if (bounce != null) {
-					pc.rebound(bounce.angle(),0.2f);
-				}
-			} else {
-				System.out.println("Alien is dead");
+			bounce = pc.preventOverlap(alien);
+			playerHealth -= 1;
+			System.out.println("OUCH");
+			System.out.println("Lives left: " + playerHealth);
+			
+			if (bounce != null) {
+				pc.rebound(bounce.angle(),0.2f);
 			}
 		}
 
-		if (pc.overlaps(goal)) {
+		if (pc.overlaps(key)) {
+			pc.gotKey();
+			key.setXPos(-1000);
+			System.out.println("Got key!");
+		}
+
+		if (pc.overlaps(goal) && pc.hasKey) {
 			scene = 2; // win screen
 		}
 
@@ -288,6 +292,7 @@ public class MyGdxGame extends ApplicationAdapter {
 			artist.draw(goo);
 		}
 
+		artist.draw(key);
 		artist.draw(goal);
 
 		batch.end();
