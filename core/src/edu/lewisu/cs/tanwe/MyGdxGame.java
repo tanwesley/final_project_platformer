@@ -11,15 +11,13 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 
 import edu.lewisu.cs.cpsc41000.common.Boundary;
 import edu.lewisu.cs.cpsc41000.common.EdgeHandler;
 import edu.lewisu.cs.cpsc41000.common.ImageBasedScreenObject;
 import edu.lewisu.cs.cpsc41000.common.ImageBasedScreenObjectDrawer;
-import edu.lewisu.cs.cpsc41000.common.PlatformCharacter;
+import edu.lewisu.cs.cpsc41000.common.MobileImageBasedScreenObject;
 import edu.lewisu.cs.cpsc41000.common.labels.ActionLabel;
 
 
@@ -32,7 +30,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	int playerHealth = 3;
 
-	ImageBasedScreenObject key;
+	MobileImageBasedScreenObject key;
 	ArrayList<ImageBasedScreenObject> walls;
 	ImageBasedScreenObject goal;
 	ArrayList<ImageBasedScreenObject> bouncyPlatforms;
@@ -61,8 +59,12 @@ public class MyGdxGame extends ApplicationAdapter {
 	Music ashesToAshes;
 	Music lifeOnMars;
 
+	// animation sequences
+	int[] fseq = {0,1,0,2}; // animation for player
+	int[] kseq = {0,0,0,1,0,0,0,2,0,0,0,3}; // animation for key
+
 	public void restart() {
-		pc.hasKey = false;
+		//pc.hasKey = false;
 		playerHealth = 3;
 		pc.setXPos(50);
 		pc.setYPos(0);
@@ -76,28 +78,33 @@ public class MyGdxGame extends ApplicationAdapter {
 		HEIGHT = Gdx.graphics.getHeight();
 		batch = new SpriteBatch();
 
-		Texture img = new Texture("spaceman.png");
+		Texture img = new Texture("majortom.png");
+		Texture alienTex = new Texture("alien.png");
 		background = new Texture("background.png");
 		WORLDWIDTH = background.getWidth();
 		WORLDHEIGHT = background.getHeight();
+		tutorials = new ArrayList<ActionLabel>();
 
 		// key 
-		Texture keyTex = new Texture("key.png");
-		key = new ImageBasedScreenObject(keyTex,1450,550,true);
+		tutorials.add(new ActionLabel("Collect wreckage before advancing to the goal to progress",1000,700,"fonts/arial_small_font.fnt"));
+		Texture keyTex = new Texture("wreckagesprite.png");
+		key = new MobileImageBasedScreenObject(keyTex,1450,550,true);
+		key.setAnimationParameters(64,64,kseq,0.1f);
 
 		// alien
-		alien = new Alien(img,400,0,false);
+		alien = new Alien(alienTex,400,0,false);
 		alien.setMaxSpeed(200);
 		alien.setAcceleration(400);
 		alien.setDeceleration(800);
 
 		// player character settings
 		pc = new PlayerCharacter(img,50,0,false);
+		pc.setAnimationParameters(32,64,fseq,0.1f);
 		pc.setMaxSpeed(400);
 		pc.setAcceleration(800);
 		pc.setDeceleration(1600);
+
 		// movement tutorial
-		tutorials = new ArrayList<ActionLabel>();
 		tutorials.add(new ActionLabel("W - Jump\nA - Move left \nD - Move right", 100, -100, "fonts/arial_small_font.fnt"));
 
 		// Building a test level with platforms
@@ -212,7 +219,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		pc.applyPhysics(dt);
 		Vector2 bounce;
 
-		
+		key.animate(0.1f);
 
 		if (pc.onSolid()) {
 			pc.setMaxSpeed(400); // resets player speed 
