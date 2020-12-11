@@ -9,9 +9,11 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 
 import edu.lewisu.cs.cpsc41000.common.Boundary;
 import edu.lewisu.cs.cpsc41000.common.EdgeHandler;
@@ -29,6 +31,11 @@ public class MyGdxGame extends ApplicationAdapter {
 	ImageBasedScreenObjectDrawer artist;
 
 	int playerHealth = 3;
+	int playerScore = 0;
+
+	// hud 
+	LabelStyle labelStyle;
+	Label hud;
 
 	MobileImageBasedScreenObject key;
 	ArrayList<ImageBasedScreenObject> walls;
@@ -63,12 +70,19 @@ public class MyGdxGame extends ApplicationAdapter {
 	int[] fseq = {0,1,0,2}; // animation for player
 	int[] kseq = {0,0,0,1,0,0,0,2,0,0,0,3}; // animation for key
 
+	public void setupLabelStyle() {
+		labelStyle = new LabelStyle();
+		labelStyle.font = new BitmapFont(Gdx.files.internal("fonts/arial.fnt"));
+	}
+
+
 	public void restart() {
-		//pc.hasKey = false;
+		pc.hasKey = false;
 		playerHealth = 3;
 		pc.setXPos(50);
 		pc.setYPos(0);
 		key.setXPos(1450);
+		playerScore = 0;
 		scene = 1;
 	}
 
@@ -78,6 +92,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		HEIGHT = Gdx.graphics.getHeight();
 		batch = new SpriteBatch();
 
+		setupLabelStyle();
+		hud = new Label("Coordinates", labelStyle);
+
 		Texture img = new Texture("majortom.png");
 		Texture alienTex = new Texture("alien.png");
 		background = new Texture("background.png");
@@ -86,16 +103,16 @@ public class MyGdxGame extends ApplicationAdapter {
 		tutorials = new ArrayList<ActionLabel>();
 
 		// key 
-		tutorials.add(new ActionLabel("Collect wreckage before advancing to the goal to progress",1000,700,"fonts/arial_small_font.fnt"));
+		tutorials.add(new ActionLabel("Collect the wreckage from your ship before advancing to the goal to progress",1000,700,"fonts/arial_small_font.fnt"));
 		Texture keyTex = new Texture("wreckagesprite.png");
 		key = new MobileImageBasedScreenObject(keyTex,1450,550,true);
 		key.setAnimationParameters(64,64,kseq,0.1f);
 
 		// alien
 		alien = new Alien(alienTex,400,0,false);
-		alien.setMaxSpeed(200);
-		alien.setAcceleration(400);
-		alien.setDeceleration(800);
+		alien.setMaxSpeed(100);
+		alien.setAcceleration(1000);
+		alien.setDeceleration(1000);
 
 		// player character settings
 		pc = new PlayerCharacter(img,50,0,false);
@@ -145,8 +162,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		tutorials.add(new ActionLabel("Touch the gold platforms to end \nthe level",2000,-40, "fonts/arial_small_font.fnt"));
 		Texture goalTex = new Texture("goal.png");
 		goal = new ImageBasedScreenObject(goalTex,2700,0,true);
-		winMessage = new ActionLabel("LEVEL \nCOMPLETE \nESC to restart",100,100,"fonts/arial_large_font.fnt");
-		deathMessage = new ActionLabel("YOU DIED \nESC to restart", 100,100,"fonts/arial_large_font.fnt");
 
 
 		pc.setPlatforms(walls);
@@ -195,6 +210,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		float dt = Gdx.graphics.getDeltaTime();
 		Gdx.gl.glClearColor(1,0,0,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+		hud.setText("LIVES: " + playerHealth + "  SCORE: " + playerScore);
+		hud.setPosition(20+(cam.position.x-WIDTH/2),440+cam.position.y-HEIGHT/2);
 		
 		if (Gdx.input.isKeyJustPressed(Keys.SPACE)) {
 			
@@ -217,6 +235,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 
 		pc.applyPhysics(dt);
+		alien.applyPhysics(dt);
+
 		Vector2 bounce;
 
 		key.animate(0.1f);
@@ -233,6 +253,13 @@ public class MyGdxGame extends ApplicationAdapter {
 					pc.rebound(bounce.angle(),0.01f);
 				}
 			}
+			if (alien.overlaps(wall)) {
+				bounce = alien.preventOverlap(wall);
+				if (bounce != null) {
+					alien.rebound(bounce.angle(),0.01f);
+				}
+				alien.accelerateAtAngle(180);
+		}
 		}
 
 		for (ImageBasedScreenObject bouncy : bouncyPlatforms) {
@@ -269,6 +296,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 
 		if (pc.overlaps(key)) {
+			playerScore += 50;
 			pc.gotKey();
 			key.setXPos(-1000);
 			System.out.println("Got key!");
@@ -301,6 +329,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		artist.draw(key);
 		artist.draw(goal);
+		hud.draw(batch,1);
 
 		batch.end();
 	}	
@@ -326,6 +355,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		} else {
 			Gdx.gl.glClearColor(1,0,0,1);
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+			winMessage = new ActionLabel("LEVEL \nCOMPLETE \nESC to restart\nScore: " + playerScore,100,100,"fonts/arial_large_font.fnt");
 			batch.setProjectionMatrix(menuCam.combined);
 			batch.begin();
 			batch.draw(background,0,0);
@@ -342,6 +372,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		} else {
 			Gdx.gl.glClearColor(1,0,0,1);
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+			deathMessage = new ActionLabel("YOU DIED \nESC to restart\nScore: " + playerScore, 100,100,"fonts/arial_large_font.fnt");
 			batch.setProjectionMatrix(menuCam.combined);
 			batch.begin();
 			batch.draw(background,0,0);
@@ -356,23 +387,23 @@ public class MyGdxGame extends ApplicationAdapter {
 			scene = 3;
 		}
 
-		if (scene == 1) {
+		if (scene == 1) {	// level
 			songs.get(0).stop();
 			songs.get(2).stop();
 			songs.get(1).play();
 			renderMain();
-		} else if (scene == 2) {
+		} else if (scene == 2) {	// win screen
 			songs.get(1).stop();
 			songs.get(2).stop();
 			songs.get(0).play();
 			renderWinScreen();
 
-		} else if (scene == 3) {
+		} else if (scene == 3) {	// death screen
 			songs.get(1).stop();
 			songs.get(2).stop();
 			songs.get(0).play();
 			renderDeathScreen();
-		} else {
+		} else {					//startup screen
 			songs.get(0).stop();
 			songs.get(1).stop();
 			songs.get(2).play();
