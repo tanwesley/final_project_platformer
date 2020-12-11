@@ -42,6 +42,7 @@ public class MyGdxGame extends ApplicationAdapter {
 	ImageBasedScreenObject goal;
 	ArrayList<ImageBasedScreenObject> bouncyPlatforms;
 	ArrayList<ImageBasedScreenObject> gooPlatforms; // players cannot jump on these
+	ArrayList<MobileImageBasedScreenObject> rocks;
 
 	ArrayList<Boundary> boundaries;
 	EdgeHandler edgy;
@@ -68,7 +69,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	// animation sequences
 	int[] fseq = {0,1,0,2}; // animation for player
-	int[] kseq = {0,0,0,1,0,0,0,2,0,0,0,3}; // animation for key
+	int[] kseq = {0,0,0,1,0,0,0,2,0,0,0,3}; // animation for key and collectables
 
 	public void setupLabelStyle() {
 		labelStyle = new LabelStyle();
@@ -82,6 +83,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		pc.setXPos(50);
 		pc.setYPos(0);
 		key.setXPos(1450);
+		rocks.get(0).setXPos(200);
+		rocks.get(1).setXPos(1200);
 		playerScore = 0;
 		scene = 1;
 	}
@@ -123,6 +126,16 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		// movement tutorial
 		tutorials.add(new ActionLabel("W - Jump\nA - Move left \nD - Move right", 100, -100, "fonts/arial_small_font.fnt"));
+
+		// collectables
+		rocks = new ArrayList<MobileImageBasedScreenObject>();
+		Texture rockTex = new Texture("spacerock.png");
+		rocks.add(new MobileImageBasedScreenObject(rockTex,200,100,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,1200,650,true));
+		for (MobileImageBasedScreenObject rock : rocks) {
+			rock.setAnimationParameters(32,32,kseq,0.1f);
+		}
+
 
 		// Building a test level with platforms
 		walls = new ArrayList<ImageBasedScreenObject>();
@@ -259,7 +272,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					alien.rebound(bounce.angle(),0.01f);
 				}
 				alien.accelerateAtAngle(180);
-		}
+			}
 		}
 
 		for (ImageBasedScreenObject bouncy : bouncyPlatforms) {
@@ -281,6 +294,13 @@ public class MyGdxGame extends ApplicationAdapter {
 				if (bounce != null) {
 					pc.setMaxSpeed(100); // slows player down
 				}
+			}
+		}
+
+		for (MobileImageBasedScreenObject rock : rocks) {
+			if (pc.overlaps(rock)) {
+				playerScore += 100;
+				rock.setXPos(-1000);
 			}
 		}
 
@@ -315,6 +335,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 		artist.draw(pc);
 		artist.draw(alien);
+
 		for (ImageBasedScreenObject wall : walls) {
 			artist.draw(wall);
 		}
@@ -327,9 +348,14 @@ public class MyGdxGame extends ApplicationAdapter {
 			artist.draw(goo);
 		}
 
+		for (MobileImageBasedScreenObject rock : rocks) {
+			artist.draw(rock);
+			rock.animate(0.1f);
+		}
 		artist.draw(key);
 		artist.draw(goal);
 		hud.draw(batch,1);
+
 
 		batch.end();
 	}	
