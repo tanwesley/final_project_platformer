@@ -27,7 +27,8 @@ import edu.lewisu.cs.cpsc41000.common.labels.ActionLabel;
 public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch batch;
 	PlayerCharacter pc;
-	Alien alien;
+	ArrayList<Alien> aliens;
+	MobileImageBasedScreenObject rocket;
 	ImageBasedScreenObjectDrawer artist;
 
 	int playerHealth = 3;
@@ -68,8 +69,10 @@ public class MyGdxGame extends ApplicationAdapter {
 	Music lifeOnMars;
 
 	// animation sequences
-	int[] fseq = {0,1,0,2}; // animation for player
+	int[] fseq = {0,1,0,2,0}; // animation for player
 	int[] kseq = {0,0,0,1,0,0,0,2,0,0,0,3}; // animation for key and collectables
+	int[] rseq = {0,1,0,2,0,3}; // rocket animation
+	int[] aseq = {0,1,0,2,0,3}; // alien animation
 
 	public void setupLabelStyle() {
 		labelStyle = new LabelStyle();
@@ -99,23 +102,14 @@ public class MyGdxGame extends ApplicationAdapter {
 		hud = new Label("Coordinates", labelStyle);
 
 		Texture img = new Texture("majortom.png");
-		Texture alienTex = new Texture("alien.png");
 		background = new Texture("background.png");
 		WORLDWIDTH = background.getWidth();
 		WORLDHEIGHT = background.getHeight();
 		tutorials = new ArrayList<ActionLabel>();
 
-		// key 
-		tutorials.add(new ActionLabel("Collect the wreckage from your ship before advancing to the goal to progress",1000,700,"fonts/arial_small_font.fnt"));
-		Texture keyTex = new Texture("wreckagesprite.png");
-		key = new MobileImageBasedScreenObject(keyTex,1450,550,true);
-		key.setAnimationParameters(64,64,kseq,0.1f);
-
-		// alien
-		alien = new Alien(alienTex,400,0,false);
-		alien.setMaxSpeed(100);
-		alien.setAcceleration(1000);
-		alien.setDeceleration(1000);
+		Texture rocketTex = new Texture("rocketship.png");
+		rocket = new MobileImageBasedScreenObject(rocketTex,200,200,false);
+		rocket.setAnimationParameters(254,128,rseq,0.7f);
 
 		// player character settings
 		pc = new PlayerCharacter(img,50,0,false);
@@ -123,6 +117,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		pc.setMaxSpeed(400);
 		pc.setAcceleration(800);
 		pc.setDeceleration(1600);
+
 
 		// movement tutorial
 		tutorials.add(new ActionLabel("W - Jump\nA - Move left \nD - Move right", 100, -100, "fonts/arial_small_font.fnt"));
@@ -135,9 +130,23 @@ public class MyGdxGame extends ApplicationAdapter {
 		for (MobileImageBasedScreenObject rock : rocks) {
 			rock.setAnimationParameters(32,32,kseq,0.1f);
 		}
+		// key 
+		tutorials.add(new ActionLabel("Collect the wreckage from your ship before advancing to the goal to progress",1000,700,"fonts/arial_small_font.fnt"));
+		Texture keyTex = new Texture("wreckagesprite.png");
+		key = new MobileImageBasedScreenObject(keyTex,1450,550,true);
+		key.setAnimationParameters(64,64,kseq,0.1f);
 
+		// alien
+		aliens = new ArrayList<Alien>();
+		Texture alienTex = new Texture("alien.png");
+		aliens.add(new Alien(alienTex,400,0,false));
+		aliens.add(new Alien(alienTex,300,0,false));
 
-		// Building a test level with platforms
+		for (Alien alien : aliens) {
+			alien.setAnimationParameters(32,32,aseq,0.1f);
+		}
+
+		// Building a level with platforms
 		walls = new ArrayList<ImageBasedScreenObject>();
 		Texture wallTex = new Texture("wall.png");
 		walls.add(new ImageBasedScreenObject(wallTex,200,0,true));
@@ -178,7 +187,11 @@ public class MyGdxGame extends ApplicationAdapter {
 
 
 		pc.setPlatforms(walls);
-		alien.setPlatforms(walls);
+
+		for (Alien alien : aliens) {
+			alien.setPlatforms(walls);
+		}
+
 		artist = new ImageBasedScreenObjectDrawer(batch);
 		cam = new OrthographicCamera(WIDTH,HEIGHT);
 		cam.translate(WIDTH/2,HEIGHT/2);
@@ -248,8 +261,17 @@ public class MyGdxGame extends ApplicationAdapter {
 		}
 
 		pc.applyPhysics(dt);
-		alien.applyPhysics(dt);
 
+		// enemy movement
+		for (Alien alien : aliens) {
+			alien.applyPhysics(dt);
+			alien.animate(dt);
+			if (alien.getDir()==0) {
+				alien.moveRight(1f);
+			} else if (alien.getDir()==1) {
+				alien.moveLeft(1f);
+			}
+		}
 		Vector2 bounce;
 
 		key.animate(0.1f);
@@ -266,12 +288,15 @@ public class MyGdxGame extends ApplicationAdapter {
 					pc.rebound(bounce.angle(),0.01f);
 				}
 			}
-			if (alien.overlaps(wall)) {
-				bounce = alien.preventOverlap(wall);
-				if (bounce != null) {
-					alien.rebound(bounce.angle(),0.01f);
+			for (Alien alien : aliens) {
+				if (alien.overlaps(wall)) {
+					bounce = alien.preventOverlap(wall);
+					if (alien.getDir() == 0) {
+						alien.setDir(1);
+					} else if (alien.getDir() == 1) {
+						alien.setDir(0);
+					}
 				}
-				alien.accelerateAtAngle(180);
 			}
 		}
 
@@ -304,14 +329,16 @@ public class MyGdxGame extends ApplicationAdapter {
 			}
 		}
 
-		if (pc.overlaps(alien)) {
-			bounce = pc.preventOverlap(alien);
-			playerHealth -= 1;
-			System.out.println("OUCH");
-			System.out.println("Lives left: " + playerHealth);
-			
-			if (bounce != null) {
-				pc.rebound(bounce.angle(),0.2f);
+		for (Alien alien : aliens) {
+			if (pc.overlaps(alien)) {
+				bounce = pc.preventOverlap(alien);
+				playerHealth -= 1;
+				System.out.println("OUCH");
+				System.out.println("Lives left: " + playerHealth);
+				
+				if (bounce != null) {
+					pc.rebound(bounce.angle(),0.2f);
+				}
 			}
 		}
 
@@ -334,7 +361,9 @@ public class MyGdxGame extends ApplicationAdapter {
 			tutorial.draw(batch,1f);
 		}
 		artist.draw(pc);
-		artist.draw(alien);
+		for (Alien alien : aliens) {
+			artist.draw(alien);
+		}
 
 		for (ImageBasedScreenObject wall : walls) {
 			artist.draw(wall);
@@ -369,6 +398,8 @@ public class MyGdxGame extends ApplicationAdapter {
 			batch.setProjectionMatrix(menuCam.combined);
 			batch.begin();
 			batch.draw(background,0,0);
+			rocket.animate(0.1f);
+			artist.draw(rocket);
 			title.draw(batch,1f);
 			startGameLabel.draw(batch,1f);
 			batch.end();
