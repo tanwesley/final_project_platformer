@@ -88,6 +88,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		key.setXPos(1450);
 		rocks.get(0).setXPos(200);
 		rocks.get(1).setXPos(1200);
+		rocks.get(2).setXPos(400);
 		playerScore = 0;
 		scene = 1;
 	}
@@ -127,6 +128,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		Texture rockTex = new Texture("spacerock.png");
 		rocks.add(new MobileImageBasedScreenObject(rockTex,200,100,true));
 		rocks.add(new MobileImageBasedScreenObject(rockTex,1200,650,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,400,0,true));
 		for (MobileImageBasedScreenObject rock : rocks) {
 			rock.setAnimationParameters(32,32,kseq,0.1f);
 		}
@@ -139,7 +141,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		// alien
 		aliens = new ArrayList<Alien>();
 		Texture alienTex = new Texture("alien.png");
-		aliens.add(new Alien(alienTex,400,0,false));
+		aliens.add(new Alien(alienTex,450,0,false));
 		aliens.add(new Alien(alienTex,300,0,false));
 
 		for (Alien alien : aliens) {
@@ -187,7 +189,6 @@ public class MyGdxGame extends ApplicationAdapter {
 
 
 		pc.setPlatforms(walls);
-
 		for (Alien alien : aliens) {
 			alien.setPlatforms(walls);
 		}
@@ -239,7 +240,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		hud.setText("LIVES: " + playerHealth + "  SCORE: " + playerScore);
 		hud.setPosition(20+(cam.position.x-WIDTH/2),440+cam.position.y-HEIGHT/2);
-		
+
+		// PLAYER INPUT
 		if (Gdx.input.isKeyJustPressed(Keys.SPACE)) {
 			
 		}
@@ -272,9 +274,8 @@ public class MyGdxGame extends ApplicationAdapter {
 				alien.moveLeft(1f);
 			}
 		}
-		Vector2 bounce;
 
-		key.animate(0.1f);
+		Vector2 bounce;
 
 		if (pc.onSolid()) {
 			pc.setMaxSpeed(400); // resets player speed 
@@ -356,7 +357,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		edgy.enforceEdges();
 		batch.begin();
-		batch.draw(background, 0,0);
+		batch.draw(background,0,0);
 		for (ActionLabel tutorial : tutorials) {
 			tutorial.draw(batch,1f);
 		}
@@ -381,6 +382,9 @@ public class MyGdxGame extends ApplicationAdapter {
 			artist.draw(rock);
 			rock.animate(0.1f);
 		}
+
+		key.animate(0.1f);
+
 		artist.draw(key);
 		artist.draw(goal);
 		hud.draw(batch,1);
