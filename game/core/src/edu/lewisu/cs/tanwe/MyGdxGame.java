@@ -40,7 +40,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	MobileImageBasedScreenObject key;
 	ArrayList<ImageBasedScreenObject> walls;
-	ImageBasedScreenObject goal;
+	MobileImageBasedScreenObject goal;
 	ArrayList<ImageBasedScreenObject> bouncyPlatforms;
 	ArrayList<ImageBasedScreenObject> gooPlatforms; // players cannot jump on these
 	ArrayList<MobileImageBasedScreenObject> rocks;
@@ -71,12 +71,11 @@ public class MyGdxGame extends ApplicationAdapter {
 	// animation sequences
 	int[] fseq = {0,1,0,2,0}; // animation for player
 	int[] kseq = {0,0,0,1,0,0,0,2,0,0,0,3}; // animation for key and collectables
-	int[] rseq = {0,1,0,2,0,3}; // rocket animation
-	int[] aseq = {0,1,0,2,0,3}; // alien animation
+	int[] rseq = {0,1,0,2,0,3}; // rocket animation, alien, goal animation
 
 	public void setupLabelStyle() {
 		labelStyle = new LabelStyle();
-		labelStyle.font = new BitmapFont(Gdx.files.internal("fonts/arial.fnt"));
+		labelStyle.font = new BitmapFont(Gdx.files.internal("fonts/arial_small_font.fnt"));
 	}
 
 
@@ -102,6 +101,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		setupLabelStyle();
 		hud = new Label("Coordinates", labelStyle);
 
+		Texture wallTex = new Texture("wall.png");
+		Texture gooTex = new Texture("goo.png");
+		Texture bouncyTex = new Texture("bouncy.png");
+
 		Texture img = new Texture("majortom.png");
 		background = new Texture("background.png");
 		WORLDWIDTH = background.getWidth();
@@ -111,6 +114,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		Texture rocketTex = new Texture("rocketship.png");
 		rocket = new MobileImageBasedScreenObject(rocketTex,200,200,false);
 		rocket.setAnimationParameters(254,128,rseq,0.7f);
+		//tutorials.add(new ActionLabel("Touch the gold platforms to end \nthe level",2000,-40, "fonts/arial_small_font.fnt"));
+		Texture goalTex = new Texture("goal.png");
+		goal = new MobileImageBasedScreenObject(goalTex,WORLDWIDTH-goalTex.getWidth(),0,true);
+		goal.setAnimationParameters(128,128,rseq,0.1f);
 
 		// player character settings
 		pc = new PlayerCharacter(img,50,0,false);
@@ -121,7 +128,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 
 		// movement tutorial
-		tutorials.add(new ActionLabel("W - Jump\nA - Move left \nD - Move right", 100, -100, "fonts/arial_small_font.fnt"));
+		//tutorials.add(new ActionLabel("W - Jump\nA - Move left \nD - Move right", 100, -100, "fonts/arial_small_font.fnt"));
 
 		// collectables
 		rocks = new ArrayList<MobileImageBasedScreenObject>();
@@ -133,24 +140,32 @@ public class MyGdxGame extends ApplicationAdapter {
 			rock.setAnimationParameters(32,32,kseq,0.1f);
 		}
 		// key 
-		tutorials.add(new ActionLabel("Collect the wreckage from your ship before advancing to the goal to progress",1000,700,"fonts/arial_small_font.fnt"));
+		//tutorials.add(new ActionLabel("Collect the wreckage from your ship before advancing to the goal to progress",1000,700,"fonts/arial_small_font.fnt"));
 		Texture keyTex = new Texture("wreckagesprite.png");
-		key = new MobileImageBasedScreenObject(keyTex,1450,550,true);
+		key = new MobileImageBasedScreenObject(keyTex,1235,wallTex.getHeight(),true);
 		key.setAnimationParameters(64,64,kseq,0.1f);
 
-		// alien
+		// aliens
 		aliens = new ArrayList<Alien>();
 		Texture alienTex = new Texture("alien.png");
 		aliens.add(new Alien(alienTex,450,0,false));
 		aliens.add(new Alien(alienTex,300,0,false));
+		aliens.add(new Alien(alienTex,1450,500+wallTex.getHeight(),false));
+		aliens.add(new Alien(alienTex,2010,1064,false));
+		aliens.add(new Alien(alienTex,2010,824,false));
+		aliens.add(new Alien(alienTex,2200,824,false));
+		aliens.add(new Alien(alienTex,4000,0,false));
+		aliens.add(new Alien(alienTex,4200,0,false));
+		aliens.add(new Alien(alienTex,4100,0,false));
+		aliens.add(new Alien(alienTex,1400,0,false));
 
 		for (Alien alien : aliens) {
-			alien.setAnimationParameters(32,32,aseq,0.1f);
+			alien.setAnimationParameters(32,32,rseq,0.1f);
 		}
+
 
 		// Building a level with platforms
 		walls = new ArrayList<ImageBasedScreenObject>();
-		Texture wallTex = new Texture("wall.png");
 		walls.add(new ImageBasedScreenObject(wallTex,200,0,true));
 		walls.add(new ImageBasedScreenObject(wallTex,500,0,true));
 		walls.add(new ImageBasedScreenObject(wallTex,500,wallTex.getHeight(),true));
@@ -160,32 +175,128 @@ public class MyGdxGame extends ApplicationAdapter {
 		walls.add(new ImageBasedScreenObject(wallTex,1500,0,true));
 		walls.add(new ImageBasedScreenObject(wallTex,1200,0,true));
 		walls.add(new ImageBasedScreenObject(wallTex,1100,0,true));
+
 		walls.add(new ImageBasedScreenObject(wallTex,1100,wallTex.getHeight(),true));
 		walls.add(new ImageBasedScreenObject(wallTex,1100,wallTex.getHeight()*2,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1100,wallTex.getHeight()*3,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1100,wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1100,wallTex.getHeight()*5,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1100,wallTex.getHeight()*6,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1100,wallTex.getHeight()*7,true));
+
 		walls.add(new ImageBasedScreenObject(wallTex,1000,500,true));
 		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth(),500,true));
 		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*2,500,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*2,500+wallTex.getHeight(),true));
 		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*3,500,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*4,500,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*5,500,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*5,500+wallTex.getHeight(),true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*6,500+wallTex.getHeight()*2,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*7,500+wallTex.getHeight()*2,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*7,500+wallTex.getHeight()*3,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*7,500+wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*7,500+wallTex.getHeight()*5,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*7,500+wallTex.getHeight()*6,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*7,500+wallTex.getHeight()*7,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*7,500+wallTex.getHeight()*8,true));
+
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*4,700,true));
+
+
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*4,1000,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*5,1000,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*6,1000,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*6,1000+wallTex.getHeight(),true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*7,1000,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*8,1000,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*9,1000,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*10,1000,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*10,1000+wallTex.getHeight(),true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*11,1000-wallTex.getHeight(),true));
+
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*7,1000-wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*8,1000-wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*9,1000-wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*10,1000-wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*11,1000-wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*12,1000-wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*13,1000-wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*14,1000-wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*14,1000-wallTex.getHeight()*3,true));
+
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*15,1000-wallTex.getHeight()*5,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*16,1000-wallTex.getHeight()*5,true));
 		
 
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*15,1000-wallTex.getHeight()*8,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*14,1000-wallTex.getHeight()*9,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*13,1000-wallTex.getHeight()*10,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*12,1000-wallTex.getHeight()*11,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*11,1000-wallTex.getHeight()*12,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*10,1000-wallTex.getHeight()*13,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*9,1000-wallTex.getHeight()*14,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*8,1000-wallTex.getHeight()*15,true));
+
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*15,1000-wallTex.getHeight()*8,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*16,1000-wallTex.getHeight()*8,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*17,1000-wallTex.getHeight()*8,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*18,1000-wallTex.getHeight()*8,true));
+
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000-wallTex.getHeight()*8,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000-wallTex.getHeight()*7,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000-wallTex.getHeight()*6,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000-wallTex.getHeight()*5,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000-wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000-wallTex.getHeight()*3,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000-wallTex.getHeight()*2,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000-wallTex.getHeight(),true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000+wallTex.getHeight(),true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000+wallTex.getHeight()*2,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000+wallTex.getHeight()*3,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000+wallTex.getHeight()*4,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000+wallTex.getHeight()*5,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000+wallTex.getHeight()*6,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000+wallTex.getHeight()*7,true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*19,1000+wallTex.getHeight()*8,true));
+
+		walls.add(new ImageBasedScreenObject(wallTex,2343,0,true));
+		walls.add(new ImageBasedScreenObject(wallTex,2472+gooTex.getWidth(),0,true));
+		walls.add(new ImageBasedScreenObject(gooTex,2472+gooTex.getWidth()*4,0,true));
+
+		walls.add(new ImageBasedScreenObject(wallTex,3530,250,true));
+		walls.add(new ImageBasedScreenObject(wallTex,3530,250-wallTex.getHeight(),true));
+		walls.add(new ImageBasedScreenObject(wallTex,3530,250-wallTex.getHeight()*2,true));
+		walls.add(new ImageBasedScreenObject(wallTex,3530,250-wallTex.getHeight()*3,true));
+		walls.add(new ImageBasedScreenObject(wallTex,3530,250-wallTex.getHeight()*4,true));
+
+		walls.add(new ImageBasedScreenObject(wallTex,3847,0,true));
+		walls.add(new ImageBasedScreenObject(wallTex,3847+wallTex.getWidth()*5,0,true));		
+
 		//player continues to bounce on these surfaces and pressing jump on landing will launch player
-		tutorials.add(new ActionLabel("Press jump while landing on \npink platforms to bounce high", 600, -40, "fonts/arial_small_font.fnt"));
-		Texture bouncyTex = new Texture("bouncy.png");
+		//tutorials.add(new ActionLabel("Press jump while landing on \npink platforms to bounce high", 600, -40, "fonts/arial_small_font.fnt"));
+		
 		bouncyPlatforms = new ArrayList<ImageBasedScreenObject>();
 		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,800,100,true));
 		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,600,400,true));
 		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,1600,150,true));
+		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,1000+wallTex.getWidth()*2,480+wallTex.getHeight()*6,true));
+		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,1895,350,true));
+		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,2590,924,true));
+		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,2862+bouncyTex.getWidth()*3,573,true));
+		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,2472+gooTex.getWidth()*5,0,true));
+		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,2824,160,true));
+		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,3734,160,true));
+
 
 		// slow the player down and prevents jumping
-		tutorials.add(new ActionLabel("Green platforms slow you down and\nprevent you from jumping", 1500, -40, "fonts/arial_small_font.fnt"));
-		Texture gooTex = new Texture("goo.png");
-		gooPlatforms = new ArrayList<ImageBasedScreenObject>();
-		gooPlatforms.add(new ImageBasedScreenObject(gooTex,1800,0,true));
-		gooPlatforms.add(new ImageBasedScreenObject(gooTex,1800+gooTex.getWidth(),0,true));
+		//tutorials.add(new ActionLabel("Green platforms slow you down and\nprevent you from jumping", 1500, -40, "fonts/arial_small_font.fnt"));
 		
-		tutorials.add(new ActionLabel("Touch the gold platforms to end \nthe level",2000,-40, "fonts/arial_small_font.fnt"));
-		Texture goalTex = new Texture("goal.png");
-		goal = new ImageBasedScreenObject(goalTex,2700,0,true);
+		gooPlatforms = new ArrayList<ImageBasedScreenObject>();
+		gooPlatforms.add(new ImageBasedScreenObject(gooTex,2472,0,true));
+		gooPlatforms.add(new ImageBasedScreenObject(gooTex,2472+gooTex.getWidth()*2,0,true));
+		gooPlatforms.add(new ImageBasedScreenObject(gooTex,2472+gooTex.getWidth()*3,0,true));
 
 
 		pc.setPlatforms(walls);
@@ -204,7 +315,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		menuCam.translate(WIDTH/2,HEIGHT/2);
 		menuCam.update();
 		batch.setProjectionMatrix(cam.combined);
-		edgy = new EdgeHandler(pc,cam,batch,0,WORLDWIDTH,0,WORLDHEIGHT,100,
+		edgy = new EdgeHandler(pc,cam,batch,0,WORLDWIDTH,0,WORLDHEIGHT,200,
 			EdgeHandler.EdgeConstants.PAN, EdgeHandler.EdgeConstants.PAN);
 		
 		scene = 0;
@@ -238,12 +349,17 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClearColor(1,0,0,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		hud.setText("LIVES: " + playerHealth + "  SCORE: " + playerScore);
-		hud.setPosition(20+(cam.position.x-WIDTH/2),440+cam.position.y-HEIGHT/2);
+		if (pc.hasKey) {
+			hud.setText("LIVES: " + playerHealth + "  SCORE: " + playerScore + "\nPARTS OBTAINED!");
+			hud.setPosition(20+(cam.position.x-WIDTH/2),440+cam.position.y-HEIGHT/2);
+		} else {
+			hud.setText("LIVES: " + playerHealth + "  SCORE: " + playerScore);
+			hud.setPosition(20+(cam.position.x-WIDTH/2),440+cam.position.y-HEIGHT/2);
+		}
 
 		// PLAYER INPUT
 		if (Gdx.input.isKeyJustPressed(Keys.SPACE)) {
-			
+			System.out.println(pc.getXPos() + "," +pc.getYPos());
 		}
 		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
 			scene = 0;
@@ -255,6 +371,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		if (Gdx.input.isKeyPressed(Keys.A)) {
 			pc.accelerateAtAngle(180);
 		}
+
 		if (Gdx.input.isKeyPressed(Keys.S)) {
 			pc.accelerateAtAngle(270);
 		}
@@ -274,6 +391,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				alien.moveLeft(1f);
 			}
 		}
+
 
 		Vector2 bounce;
 
@@ -299,7 +417,7 @@ public class MyGdxGame extends ApplicationAdapter {
 					}
 				}
 			}
-		}
+	}
 
 		for (ImageBasedScreenObject bouncy : bouncyPlatforms) {
 			if (pc.overlaps(bouncy)) {
@@ -318,7 +436,8 @@ public class MyGdxGame extends ApplicationAdapter {
 			if (pc.overlaps(goo)) {
 				bounce = pc.preventOverlap(goo);
 				if (bounce != null) {
-					pc.setMaxSpeed(100); // slows player down
+					pc.rebound(bounce.angle(),1f);
+					playerHealth -= 1;
 				}
 			}
 		}
@@ -343,6 +462,7 @@ public class MyGdxGame extends ApplicationAdapter {
 			}
 		}
 
+
 		if (pc.overlaps(key)) {
 			playerScore += 50;
 			pc.gotKey();
@@ -352,6 +472,9 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		if (pc.overlaps(goal) && pc.hasKey) {
 			scene = 2; // win screen
+		} else if (pc.overlaps(goal) && !pc.hasKey) {
+			hud.setText("You don't have your ship parts!");
+			hud.setPosition((200+cam.position.x-WIDTH/2),200+cam.position.y-HEIGHT/2);
 		}
 
 
@@ -387,6 +510,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		artist.draw(key);
 		artist.draw(goal);
+		goal.animate(dt);
 		hud.draw(batch,1);
 
 
