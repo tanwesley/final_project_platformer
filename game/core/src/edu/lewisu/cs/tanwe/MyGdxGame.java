@@ -12,8 +12,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
+import com.badlogic.gdx.utils.Array;
 
 import edu.lewisu.cs.cpsc41000.common.Boundary;
 import edu.lewisu.cs.cpsc41000.common.EdgeHandler;
@@ -33,11 +36,13 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	int playerHealth = 3;
 	int playerScore = 0;
+	int keysCollected = 0;
 
 	// hud 
 	LabelStyle labelStyle;
 	Label hud;
 
+	ArrayList<MobileImageBasedScreenObject> keys;
 	MobileImageBasedScreenObject key;
 	ArrayList<ImageBasedScreenObject> walls;
 	MobileImageBasedScreenObject goal;
@@ -59,6 +64,8 @@ public class MyGdxGame extends ApplicationAdapter {
 	ActionLabel deathMessage;
 	ActionLabel startGameLabel;
 	ArrayList<ActionLabel> tutorials;
+	ArrayList<ImageBasedScreenObject> tutorialObj;
+
 	int scene;
 	Texture background;
 
@@ -73,6 +80,37 @@ public class MyGdxGame extends ApplicationAdapter {
 	int[] kseq = {0,0,0,1,0,0,0,2,0,0,0,3}; // animation for key and collectables
 	int[] rseq = {0,1,0,2,0,3}; // rocket animation, alien, goal animation
 
+	public void createTutorials() {
+		tutorials = new ArrayList<ActionLabel>();
+		tutorials.add(new ActionLabel("HOW TO PLAY",50,400,"fonts/arial_large_font.fnt"));
+		tutorials.add(new ActionLabel("MOVEMENT: W - Jump \nA - move left \nS - accelerate downward \nD move right", 50, 300, "fonts/arial_small_font.fnt"));
+		tutorials.add(new ActionLabel("PAUSE: ESC", 50, 270, "fonts/arial_small_font.fnt"));
+
+		tutorials.add(new ActionLabel("COLLECT ALL 3 \nMISSING PARTS \nTO YOUR SHIP! ->",50,150,"fonts/arial_small_font.fnt"));
+		tutorials.add(new ActionLabel("GET TO YOUR SHIP \nONCE YOU HAVE \nALL PARTS! ->",50,75,"fonts/arial_small_font.fnt"));
+		tutorials.add(new ActionLabel("COLLECT SPACE\n ROCKS TO SCORE\n POINTS! ->",400,320,"fonts/arial_small_font.fnt"));
+
+		tutorials.add(new ActionLabel("AVOID ALIENS! ->",400,250,"fonts/arial_small_font.fnt"));
+		tutorials.add(new ActionLabel("DON'T TOUCH GREEN GOO ->",400,200, "fonts/arial_small_font.fnt"));
+		tutorials.add(new ActionLabel("JUMP ON PINK\n PLATFORMS TO \nLAUNCH YOURSELF ->",400,75, "fonts/arial_small_font.fnt"));
+
+		Texture tKeyTex = new Texture("staticwreckage.png");
+		Texture tGoalTex = new Texture("staticgoal.png");
+		Texture tAlienTex = new Texture("staticalien.png");
+		Texture tRockTex = new Texture("staticrock.png");
+		Texture tGooTex = new Texture("goo.png");
+		Texture tBouncyTex = new Texture("bouncy.png");
+
+		tutorialObj = new ArrayList<ImageBasedScreenObject>();
+		tutorialObj.add(new ImageBasedScreenObject(tKeyTex,250,150,true));
+		tutorialObj.add(new ImageBasedScreenObject(tGoalTex,180,0,true));
+		tutorialObj.add(new ImageBasedScreenObject(tRockTex,500,300,true));
+		tutorialObj.add(new ImageBasedScreenObject(tAlienTex,550,250,true));
+		tutorialObj.add(new ImageBasedScreenObject(tGooTex,430,180,true));
+		tutorialObj.add(new ImageBasedScreenObject(tBouncyTex,430,40,true));
+
+	}
+
 	public void setupLabelStyle() {
 		labelStyle = new LabelStyle();
 		labelStyle.font = new BitmapFont(Gdx.files.internal("fonts/arial_small_font.fnt"));
@@ -81,13 +119,32 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	public void restart() {
 		pc.hasKey = false;
+		keysCollected = 0;
 		playerHealth = 3;
 		pc.setXPos(50);
 		pc.setYPos(0);
-		key.setXPos(1450);
+
+		keys.get(0).setXPos(1235);
+		keys.get(1).setXPos(1038);
+		keys.get(2).setXPos(2000);
+
 		rocks.get(0).setXPos(200);
 		rocks.get(1).setXPos(1200);
 		rocks.get(2).setXPos(400);
+		rocks.get(3).setXPos(1496);
+		rocks.get(4).setXPos(1934);
+		rocks.get(5).setXPos(2087);
+		rocks.get(6).setXPos(1044);
+		rocks.get(7).setXPos(1496);
+		rocks.get(8).setXPos(2231);
+		rocks.get(9).setXPos(2476);
+		rocks.get(10).setXPos(1393);
+		rocks.get(11).setXPos(2444);
+		rocks.get(12).setXPos(2394);
+		rocks.get(13).setXPos(2645);
+		rocks.get(14).setXPos(4200);
+		rocks.get(15).setXPos(4289);
+
 		playerScore = 0;
 		scene = 1;
 	}
@@ -98,6 +155,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		HEIGHT = Gdx.graphics.getHeight();
 		batch = new SpriteBatch();
 
+		createTutorials();
 		setupLabelStyle();
 		hud = new Label("Coordinates", labelStyle);
 
@@ -109,12 +167,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		background = new Texture("background.png");
 		WORLDWIDTH = background.getWidth();
 		WORLDHEIGHT = background.getHeight();
-		tutorials = new ArrayList<ActionLabel>();
 
 		Texture rocketTex = new Texture("rocketship.png");
 		rocket = new MobileImageBasedScreenObject(rocketTex,200,200,false);
 		rocket.setAnimationParameters(254,128,rseq,0.7f);
-		//tutorials.add(new ActionLabel("Touch the gold platforms to end \nthe level",2000,-40, "fonts/arial_small_font.fnt"));
 		Texture goalTex = new Texture("goal.png");
 		goal = new MobileImageBasedScreenObject(goalTex,WORLDWIDTH-goalTex.getWidth(),0,true);
 		goal.setAnimationParameters(128,128,rseq,0.1f);
@@ -127,8 +183,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		pc.setDeceleration(1600);
 
 
-		// movement tutorial
-		//tutorials.add(new ActionLabel("W - Jump\nA - Move left \nD - Move right", 100, -100, "fonts/arial_small_font.fnt"));
 
 		// collectables
 		rocks = new ArrayList<MobileImageBasedScreenObject>();
@@ -136,28 +190,48 @@ public class MyGdxGame extends ApplicationAdapter {
 		rocks.add(new MobileImageBasedScreenObject(rockTex,200,100,true));
 		rocks.add(new MobileImageBasedScreenObject(rockTex,1200,650,true));
 		rocks.add(new MobileImageBasedScreenObject(rockTex,400,0,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,1496,562,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,1934,1062,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,2087,1062,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,1044,0,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,1496,562,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,2231,820,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,2476,817,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,1393,0,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,2444, 569,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,2394,62,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,2645,62,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,4200,0,true));
+		rocks.add(new MobileImageBasedScreenObject(rockTex,4289,0,true));
+
 		for (MobileImageBasedScreenObject rock : rocks) {
 			rock.setAnimationParameters(32,32,kseq,0.1f);
 		}
 		// key 
-		//tutorials.add(new ActionLabel("Collect the wreckage from your ship before advancing to the goal to progress",1000,700,"fonts/arial_small_font.fnt"));
 		Texture keyTex = new Texture("wreckagesprite.png");
-		key = new MobileImageBasedScreenObject(keyTex,1235,wallTex.getHeight(),true);
-		key.setAnimationParameters(64,64,kseq,0.1f);
+		keys = new ArrayList<MobileImageBasedScreenObject>();
+		keys.add(new MobileImageBasedScreenObject(keyTex,1235,wallTex.getHeight(),true));
+		keys.add(new MobileImageBasedScreenObject(keyTex,1038,262,true));
+		keys.add(new MobileImageBasedScreenObject(keyTex,2000,817,true));
+		for (MobileImageBasedScreenObject key : keys) {
+			key.setAnimationParameters(64,64,kseq,0.1f);
+		}
 
 		// aliens
 		aliens = new ArrayList<Alien>();
 		Texture alienTex = new Texture("alien.png");
-		aliens.add(new Alien(alienTex,450,0,false));
 		aliens.add(new Alien(alienTex,300,0,false));
+		aliens.add(new Alien(alienTex,450,0,false));
 		aliens.add(new Alien(alienTex,1450,500+wallTex.getHeight(),false));
+		aliens.add(new Alien(alienTex,2147,1062,false));
 		aliens.add(new Alien(alienTex,2010,1064,false));
 		aliens.add(new Alien(alienTex,2010,824,false));
 		aliens.add(new Alien(alienTex,2200,824,false));
 		aliens.add(new Alien(alienTex,4000,0,false));
 		aliens.add(new Alien(alienTex,4200,0,false));
 		aliens.add(new Alien(alienTex,4100,0,false));
-		aliens.add(new Alien(alienTex,1400,0,false));
+		aliens.add(new Alien(alienTex,1300,0,false));
+		aliens.add(new Alien(alienTex,1450,0,false));
 
 		for (Alien alien : aliens) {
 			alien.setAnimationParameters(32,32,rseq,0.1f);
@@ -213,7 +287,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*9,1000,true));
 		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*10,1000,true));
 		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*10,1000+wallTex.getHeight(),true));
-		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*11,1000-wallTex.getHeight(),true));
+		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*11,1000,true));
 
 		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*7,1000-wallTex.getHeight()*4,true));
 		walls.add(new ImageBasedScreenObject(wallTex,1000+wallTex.getWidth()*8,1000-wallTex.getHeight()*4,true));
@@ -263,7 +337,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		walls.add(new ImageBasedScreenObject(wallTex,2343,0,true));
 		walls.add(new ImageBasedScreenObject(wallTex,2472+gooTex.getWidth(),0,true));
-		walls.add(new ImageBasedScreenObject(gooTex,2472+gooTex.getWidth()*4,0,true));
+		walls.add(new ImageBasedScreenObject(wallTex,2472+gooTex.getWidth()*4,0,true));
+		walls.add(new ImageBasedScreenObject(wallTex,2824,120,true));
 
 		walls.add(new ImageBasedScreenObject(wallTex,3530,250,true));
 		walls.add(new ImageBasedScreenObject(wallTex,3530,250-wallTex.getHeight(),true));
@@ -272,27 +347,21 @@ public class MyGdxGame extends ApplicationAdapter {
 		walls.add(new ImageBasedScreenObject(wallTex,3530,250-wallTex.getHeight()*4,true));
 
 		walls.add(new ImageBasedScreenObject(wallTex,3847,0,true));
-		walls.add(new ImageBasedScreenObject(wallTex,3847+wallTex.getWidth()*5,0,true));		
+		walls.add(new ImageBasedScreenObject(wallTex,3847+wallTex.getWidth()*5,0,true));	
+		
+		walls.add(new ImageBasedScreenObject(wallTex,2590,924,true));
 
 		//player continues to bounce on these surfaces and pressing jump on landing will launch player
-		//tutorials.add(new ActionLabel("Press jump while landing on \npink platforms to bounce high", 600, -40, "fonts/arial_small_font.fnt"));
-		
 		bouncyPlatforms = new ArrayList<ImageBasedScreenObject>();
 		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,800,100,true));
 		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,600,400,true));
 		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,1600,150,true));
-		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,1000+wallTex.getWidth()*2,480+wallTex.getHeight()*6,true));
-		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,1895,350,true));
-		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,2590,924,true));
+		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,1000+wallTex.getWidth()*3,480+wallTex.getHeight()*6,true));
 		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,2862+bouncyTex.getWidth()*3,573,true));
 		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,2472+gooTex.getWidth()*5,0,true));
-		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,2824,160,true));
 		bouncyPlatforms.add(new ImageBasedScreenObject(bouncyTex,3734,160,true));
 
-
-		// slow the player down and prevents jumping
-		//tutorials.add(new ActionLabel("Green platforms slow you down and\nprevent you from jumping", 1500, -40, "fonts/arial_small_font.fnt"));
-		
+		//harms player
 		gooPlatforms = new ArrayList<ImageBasedScreenObject>();
 		gooPlatforms.add(new ImageBasedScreenObject(gooTex,2472,0,true));
 		gooPlatforms.add(new ImageBasedScreenObject(gooTex,2472+gooTex.getWidth()*2,0,true));
@@ -349,20 +418,16 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClearColor(1,0,0,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		if (pc.hasKey) {
-			hud.setText("LIVES: " + playerHealth + "  SCORE: " + playerScore + "\nPARTS OBTAINED!");
-			hud.setPosition(20+(cam.position.x-WIDTH/2),440+cam.position.y-HEIGHT/2);
-		} else {
-			hud.setText("LIVES: " + playerHealth + "  SCORE: " + playerScore);
-			hud.setPosition(20+(cam.position.x-WIDTH/2),440+cam.position.y-HEIGHT/2);
-		}
+		hud.setText("LIVES: " + playerHealth + "  SCORE: " + playerScore + "\nPARTS COLLECTED: " + keysCollected + "/3");
+		hud.setPosition(20+(cam.position.x-WIDTH/2),440+cam.position.y-HEIGHT/2);
+		
 
 		// PLAYER INPUT
 		if (Gdx.input.isKeyJustPressed(Keys.SPACE)) {
 			System.out.println(pc.getXPos() + "," +pc.getYPos());
 		}
 		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
-			scene = 0;
+			scene = 4;
 			return;
 		}
 		if (Gdx.input.isKeyPressed(Keys.W) && pc.onSolid()) {
@@ -401,7 +466,6 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		for (ImageBasedScreenObject wall : walls) {
 			if (pc.overlaps(wall)) {
-				System.out.println("collision");
 				bounce = pc.preventOverlap(wall);
 				if (bounce != null) {
 					pc.rebound(bounce.angle(),0.01f);
@@ -462,18 +526,24 @@ public class MyGdxGame extends ApplicationAdapter {
 			}
 		}
 
+		for (MobileImageBasedScreenObject key : keys) {
+			if (pc.overlaps(key)) {
+				playerScore += 50;
 
-		if (pc.overlaps(key)) {
-			playerScore += 50;
+				keysCollected += 1;
+				key.setXPos(-1000);
+				System.out.println("Got key!");
+			}
+		}
+
+		if (keysCollected==3) {
 			pc.gotKey();
-			key.setXPos(-1000);
-			System.out.println("Got key!");
 		}
 
 		if (pc.overlaps(goal) && pc.hasKey) {
 			scene = 2; // win screen
 		} else if (pc.overlaps(goal) && !pc.hasKey) {
-			hud.setText("You don't have your ship parts!");
+			hud.setText("You don't have all your ship parts!");
 			hud.setPosition((200+cam.position.x-WIDTH/2),200+cam.position.y-HEIGHT/2);
 		}
 
@@ -481,10 +551,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		edgy.enforceEdges();
 		batch.begin();
 		batch.draw(background,0,0);
-		for (ActionLabel tutorial : tutorials) {
-			tutorial.draw(batch,1f);
-		}
 		artist.draw(pc);
+
 		for (Alien alien : aliens) {
 			artist.draw(alien);
 		}
@@ -506,13 +574,14 @@ public class MyGdxGame extends ApplicationAdapter {
 			rock.animate(0.1f);
 		}
 
-		key.animate(0.1f);
+		for (MobileImageBasedScreenObject key : keys) {
+			key.animate(0.1f);
+			artist.draw(key);
+		}
 
-		artist.draw(key);
 		artist.draw(goal);
 		goal.animate(dt);
 		hud.draw(batch,1);
-
 
 		batch.end();
 	}	
@@ -521,7 +590,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClearColor(1,0,0,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
-			scene = 1;
+			scene = 4;
 		} else {
 			batch.setProjectionMatrix(menuCam.combined);
 			batch.begin();
@@ -530,6 +599,23 @@ public class MyGdxGame extends ApplicationAdapter {
 			artist.draw(rocket);
 			title.draw(batch,1f);
 			startGameLabel.draw(batch,1f);
+			batch.end();
+		}
+	}
+
+	public void renderTutorialScreen() {
+		if (Gdx.input.isKeyJustPressed(Keys.ESCAPE)) {
+			scene = 1;
+		} else {
+			batch.setProjectionMatrix(menuCam.combined);
+			batch.begin();
+			batch.draw(background,0,0);
+			for (ActionLabel tutorial : tutorials) {
+				tutorial.draw(batch,1f);
+			}
+			for (ImageBasedScreenObject obj : tutorialObj) {
+				artist.draw(obj);
+			}
 			batch.end();
 		}
 	}
@@ -588,6 +674,8 @@ public class MyGdxGame extends ApplicationAdapter {
 			songs.get(2).stop();
 			songs.get(0).play();
 			renderDeathScreen();
+		} else if (scene == 4) { // tutorial screen
+			renderTutorialScreen();
 		} else {					//startup screen
 			songs.get(0).stop();
 			songs.get(1).stop();
